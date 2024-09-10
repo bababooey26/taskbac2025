@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAC 2025 Task Manager</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #c0bebe;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            margin-top: 20px;
+            color: #333;
+            font-size: 32px;
+        }
+        .task-container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 400px;
+            margin-top: 20px;
+        }
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+        }
+        select, input[type="text"], button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box; /* تأكد من أن البادينج لا يسبب مشاكل في العرض */
+        }
+        select {
+            background-color: #f9f9f9;
+        }
+        input[type="text"] {
+            background-color: #ffffff;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .completed {
+            text-decoration: line-through;
+            color: green;
+        }
+        .checkmark {
+            color: green;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+            text-align: center;
+        }
+        .delete-button {
+            background-color: red;
+            color: white;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .delete-button:hover {
+            background-color: darkred;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>BAC 2025</h1>
+
+    <div class="task-container">
+        <label for="subject">اختر المادة:</label>
+        <select id="subject">
+            <option value="فيزياء">فيزياء</option>
+            <option value="علوم">علوم</option>
+            <option value="رياضيات">رياضيات</option>
+            <option value="إسلامية">إسلامية</option>
+            <option value="اجتماعيات">اجتماعيات</option>
+            <option value="فلسفة">فلسفة</option>
+            <option value="عربية">عربية</option>
+            <option value="إنجليزية">إنجليزية</option>
+            <option value="فرنسية">فرنسية</option>
+        </select>
+
+        <label for="task-input">أدخل المهمة:</label>
+        <input type="text" id="task-input" placeholder="أدخل مهمتك هنا">
+
+        <button onclick="addTask()">إضافة المهمة</button>
+
+        <table id="task-table">
+            <thead>
+                <tr>
+                    <th>المادة</th>
+                    <th>المهمة</th>
+                    <th>اكتمال</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+        <button class="delete-button" onclick="deleteAllTasks()">حذف جميع المهام</button>
+    </div>
+
+    <div class="footer">
+        HELLO DIKRA
+    </div>
+
+    <script>
+        // تحميل المهام من localStorage عند بدء الصفحة
+        window.onload = function() {
+            loadTasks();
+        };
+
+        function addTask() {
+            const subject = document.getElementById('subject').value;
+            const taskInput = document.getElementById('task-input');
+            const task = taskInput.value.trim();
+
+            if (task) {
+                const taskData = { subject, task, completed: false };
+
+                saveTaskToLocalStorage(taskData);
+                appendTaskToTable(taskData);
+
+                taskInput.value = '';
+            }
+        }
+
+        function saveTaskToLocalStorage(taskData) {
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.push(taskData);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        function loadTasks() {
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks.forEach(task => appendTaskToTable(task));
+        }
+
+        function appendTaskToTable(taskData) {
+            const table = document.getElementById('task-table').querySelector('tbody');
+            const row = table.insertRow();
+            const cell1 = row.insertCell(0);
+            const cell2 = row.insertCell(1);
+            const cell3 = row.insertCell(2);
+
+            cell1.textContent = taskData.subject;
+            cell2.textContent = taskData.task;
+            cell3.innerHTML = `<button onclick="completeTask(this)">✔️</button>`;
+            
+            if (taskData.completed) {
+                row.classList.add('completed');
+                cell3.querySelector('button').innerHTML = '✔️';
+            }
+        }
+
+        function completeTask(button) {
+            const row = button.closest('tr');
+            row.classList.toggle('completed');
+
+            const taskIndex = [...row.parentElement.children].indexOf(row);
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            tasks[taskIndex].completed = row.classList.contains('completed');
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+
+            if (row.classList.contains('completed')) {
+                button.innerHTML = '✔️';
+            } else {
+                button.innerHTML = '⭕';
+            }
+        }
+
+        function deleteAllTasks() {
+            localStorage.removeItem('tasks'); // حذف جميع المهام من localStorage
+            const tableBody = document.getElementById('task-table').querySelector('tbody');
+            tableBody.innerHTML = ''; // إفراغ الجدول من المهام
+        }
+    </script>
+
+</body>
+</html>
